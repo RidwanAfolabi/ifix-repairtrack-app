@@ -26,3 +26,13 @@ export function formatDate(raw) {
   const [, y, mo, d] = match;
   return `${d} ${MONTHS[Number(mo) - 1]} ${y}`;
 }
+
+// Only safe for columns the schema always writes via SQLite's `datetime('now')`
+// (jobs.created_at/updated_at, status_history.timestamp) — those are
+// unambiguously UTC, unlike warranty_start_date/warranty_claimed_at (Malaysia
+// time, from services/warranty.ts). Do not use this on the latter.
+export function hoursSinceUtc(raw) {
+  if (!raw) return null;
+  const ms = Date.now() - new Date(`${raw.replace(' ', 'T')}Z`).getTime();
+  return ms / (1000 * 60 * 60);
+}
